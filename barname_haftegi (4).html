@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>برنامه هفتگی مطالعه</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #07131a;
+      --bg1: #0c1e28;
+      --ink: #e8f4f2;
+      --muted: #8aa3a8;
+      --teal: #2dd4bf;
+      --gold: #f4c56a;
+      --ok: #34d399;
+      --skip: #fb7185;
+      --ink-dark: #061318;
+      --glass: rgba(255, 255, 255, 0.07)
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; height: auto; overflow-x: hidden; overflow-y: auto; }
+    body {
+      font-family: "Dana", Tahoma, sans-serif;
+      color: var(--ink);
+      background: var(--bg0);
+    }
+    .page {
+      direction: rtl;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      overflow-y: visible;
+      padding: 20px 18px 32px;
+      display: block;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgb(45 212 191 / .18), transparent 55%),
+        radial-gradient(800px 480px at 110% 10%, rgb(244 197 106 / .12), transparent 50%),
+        linear-gradient(160deg, var(--bg0), var(--bg1) 55%, #10222c);
+    }
+    .sheet {
+      width: min(80rem, 100%);
+      margin-inline: auto;
+      overflow: visible;
+      border-radius: 28px;
+      padding: 40px 18px 16px;
+      background: linear-gradient(180deg, rgb(255 255 255 / .06), rgb(255 255 255 / .025));
+      box-shadow: 0 0 0 1px rgb(255 255 255 / .12), 0 30px 80px rgb(0 0 0 / .35);
+    }
+    header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { font-size: clamp(22px, 3vw, 34px); font-weight: 800; line-height: 1.2; }
+    h1 em { font-style: normal; color: var(--gold); }
+    .badge {
+      padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      color: var(--ink-dark); background: linear-gradient(135deg, var(--teal), #5eead4); white-space: nowrap;
+    }
+    .toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: stretch; gap: 11px; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
+    .field {
+      background: rgb(255 255 255 / .045);
+      box-shadow: 0 0 0 1px rgb(255 255 255 / .1);
+      border-radius: 14px; padding: 7px 12px 6px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .field span { display: block; text-align: center; font-size: 11px; color: var(--muted); }
+    .field input {
+      width: 100%; border: 0; outline: none; background: transparent;
+      color: var(--ink); font: inherit; font-weight: 600; font-size: 14px;
+      text-align: center; padding: 2px 0 4px;
+      border-bottom: 1px dashed rgb(255 255 255 / .16);
+    }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    button {
+      font: inherit; font-size: 12px; font-weight: 700; border: 0; cursor: pointer;
+      border-radius: 999px; padding: 0 15px;
+    }
+    .save { background: var(--teal); color: var(--ink-dark); padding: 12px 10px; }
+    .print { background: var(--ink); color: var(--ink-dark); padding: 12px 10px; }
+    .ghost { background: transparent; color: var(--muted); box-shadow: 0 0 0 1px rgb(255 255 255 / .12); padding: 12px 10px; }
+    .toast {
+      display: none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      background: #134e4a; color: #ecfeff; padding: 10px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; z-index: 20;
+    }
+    .toast.show { display: block; }
+    .board { overflow: visible; }
+    .grid {
+      display: grid;
+      grid-template-columns: 4rem repeat(6, minmax(0, 1fr));
+      grid-template-rows: 2.85rem;
+      grid-auto-rows: 9.25rem;
+      gap: 8px; width: 100%; overflow: visible;
+    }
+    .head, .day, .cell { border-radius: 14px; overflow: hidden; min-width: 0; min-height: 0; }
+    .head {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; font-weight: 800; font-size: 16px; color: var(--ink-dark); text-align: center; padding: 4px;
+    }
+    .head.dayhead { background: linear-gradient(180deg, #134e4a, #0f3d3a); color: #ecfeff; }
+    .s0 { background: linear-gradient(180deg, #5eead4, #2dd4bf); }
+    .s1 { background: linear-gradient(180deg, #93c5fd, #60a5fa); }
+    .s2 { background: linear-gradient(180deg, #c4b5fd, #a78bfa); }
+    .s3 { background: linear-gradient(180deg, #fdba74, #fb923c); }
+    .s4 { background: linear-gradient(180deg, #fcd34d, #f59e0b); }
+    .s5 { background: linear-gradient(180deg, #cbd5e1, #94a3b8); }
+    .day {
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      height: 9.25rem; background: rgb(15 61 58 / .55);
+      box-shadow: 0 0 0 1px rgb(45 212 191 / .18); font-weight: 700; font-size: 13px; color: #99f6e4;
+    }
+    .cell {
+      display: grid; grid-template-rows: 1.65rem minmax(0,1fr) 2.15rem; gap: 5px;
+      height: 9.25rem; padding: 6px;
+      background: rgb(255 255 255 / .045); box-shadow: 0 0 0 1px rgb(255 255 255 / .1);
+      transition: .35s ease, border-color .35s ease, background .35s ease;
+    }
+    .cell:hover, .cell:focus-within {
+    background: var(--glass);
+    border-color: rgba(45, 212, 191, 0.28);
+    transform: translateY(-1px);
+    }
+    .cell.done { background: rgb(16 185 129 / .1); box-shadow: 0 0 0 1px rgb(52 211 153 / .45); }
+    .cell.skip { background: rgb(251 113 133 / .08); box-shadow: 0 0 0 1px rgb(251 113 133 / .4); }
+    .st {
+      width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 999px;
+      background: rgb(255 255 255 / .06); color: var(--muted); font-size: 10px; font-weight: 700;
+      transition: .35s ease, border-color .35s ease, background .35s ease;
+    }
+    .st.done { background: rgb(52 211 153 / .18); color: var(--ok); }
+    .st.skip { background: rgb(251 113 133 / .16); color: var(--skip); }
+    .shell {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden;
+      background: rgb(0 0 0 / .18); border-radius: 10px;
+    }
+    input {
+      transition: .35s ease, border-color .35s ease, background .35s ease;
+    }
+    .shell input {
+      width: 100%; height: 100%; min-width: 0; border: 0; margin: 0; background: transparent;
+      color: var(--ink); text-align: center; outline: none; padding: 0 4px; font: inherit; line-height: 1;
+    }
+    .topic input { font-size: 14px; font-weight: 800; }
+    .small input { font-size: 12px; font-weight: 600; }
+    .shell input::placeholder { color: rgb(232 244 242 / .34); font-weight: 700; opacity: 1; }
+    .split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 4px; height: 100%; min-width: 0; overflow: hidden; }
+    .grid input:focus {
+            background: rgb(0 0 0 / .1);
+    }
+
+    @media (max-width: 900px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .actions { justify-content: space-between; min-height: 40px; }
+    }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
+      @page { size: A4 landscape; margin: 0; }
+      html, body {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 210mm !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        background: var(--bg0) !important;
+      }
+      .page {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 186mm !important;
+        min-height: 0 !important;
+        margin: 0 auto !important;
+        padding: 5mm !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background:
+          radial-gradient(900px 500px at 10% -10%, rgb(45 212 191 / .18), transparent 55%),
+          linear-gradient(160deg, var(--bg0), var(--bg1) 55%, #10222c) !important;
+      }
+      .no-print, .toast { display: none !important; }
+      .sheet {
+        flex: 1 1 auto;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 100% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 8px 10px !important;
+        border-radius: 12px;
+      }
+      header { flex: 0 0 auto; margin-bottom: 6px; gap: 6px; }
+      h1 { font-size: 18px !important; }
+      .board { flex: 1 1 auto; min-height: 0; overflow: hidden !important; }
+      .grid {
+        height: 100% !important;
+        overflow: hidden !important;
+        gap: 4px !important;
+        grid-template-columns: 14mm repeat(6, minmax(0, 1fr)) !important;
+        grid-template-rows: 8mm repeat(7, minmax(0, 1fr)) !important;
+        grid-auto-rows: minmax(0, 1fr) !important;
+      }
+      .cell, .day, .head { height: 100% !important; min-height: 0 !important; overflow: hidden !important; }
+      .cell { grid-template-rows: 5mm minmax(0,1fr) 6.5mm !important; gap: 2px; padding: 3px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast">برنامه در همین دستگاه ذخیره شد</div>
+  <div class="page">
+    <section class="sheet">
+      <header>
+        <div class="title-row">
+          <div>
+            <h1>برنامه <em>هفتگی</em> مطالعه</h1>
+          </div>
+          <div class="badge" id="badge">شنبه تا جمعه · 0 از 42 تکمیل</div>
+        </div>
+        <div class="toolbar">
+          <div class="fields">
+            <label class="field"><span>نام</span><input id="name" type="text" placeholder="نام دانش‌آموز" /></label>
+            <label class="field"><span>هفته</span><input id="week" type="text" placeholder="مثلاً هفته ۳ مهر" /></label>
+          </div>
+          <div class="actions no-print">
+            <button type="button" class="ghost" id="clearBtn">پاک کردن</button>
+            <button type="button" class="print" id="printBtn">چاپ / PDF</button>
+            <button type="button" class="save" id="saveBtn">ذخیره در این دستگاه</button>
+          </div>
+        </div>
+      </header>
+      <div class="board"><div class="grid" id="board"></div></div>
+    </section>
+  </div>
+  <script>
+    const KEY = "barname-haftegi-v1";
+    const DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
+    const SUBJECTS = ["زیست", "شیمی", "فیزیک", "ریاضی", "زمین", "دروس عمومی"];
+    const board = document.getElementById("board");
+
+    function emptyCell() { return { topic: "", page: "", practice: "", status: "unset" }; }
+    function k(d, s) { return d + "__" + s; }
+    function emptyState() {
+      const cells = {};
+      DAYS.forEach((d) => SUBJECTS.forEach((s) => { cells[k(d, s)] = emptyCell(); }));
+      return { name: "", week: "", cells };
+    }
+    function load() {
+      const base = emptyState();
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return base;
+        const p = JSON.parse(raw);
+        return { name: p.name || "", week: p.week || "", cells: Object.assign(base.cells, p.cells || {}) };
+      } catch (e) { return base; }
+    }
+    function cycle(st) { return st === "unset" ? "done" : st === "done" ? "skip" : "unset"; }
+    function label(st) { return st === "done" ? "تکمیل شده" : st === "skip" ? "انجام نشده" : "ثبت وضعیت"; }
+
+    let data = load();
+    document.getElementById("name").value = data.name;
+    document.getElementById("week").value = data.week;
+
+    const dayHead = document.createElement("div");
+    dayHead.className = "head dayhead";
+    dayHead.textContent = "روز";
+    board.appendChild(dayHead);
+    SUBJECTS.forEach((s, i) => {
+      const el = document.createElement("div");
+      el.className = "head s" + i;
+      el.textContent = s;
+      board.appendChild(el);
+    });
+
+    function inp(cls, ph, val, on) {
+      const wrap = document.createElement("label");
+      wrap.className = "shell " + cls;
+      const i = document.createElement("input");
+      i.placeholder = ph;
+      i.value = val;
+      i.addEventListener("input", () => on(i.value));
+      wrap.appendChild(i);
+      return wrap;
+    }
+
+    function renderCell(day, subject) {
+      const key = k(day, subject);
+      if (!data.cells[key]) data.cells[key] = emptyCell();
+      const cell = data.cells[key];
+      const wrap = document.createElement("article");
+      wrap.className = "cell" + (cell.status === "done" ? " done" : cell.status === "skip" ? " skip" : "");
+
+      const st = document.createElement("button");
+      st.type = "button";
+      st.className = "st" + (cell.status === "done" ? " done" : cell.status === "skip" ? " skip" : "");
+      st.textContent = label(cell.status);
+      st.addEventListener("click", () => {
+        data.cells[key].status = cycle(data.cells[key].status);
+        st.textContent = label(data.cells[key].status);
+        wrap.className = "cell" + (data.cells[key].status === "done" ? " done" : data.cells[key].status === "skip" ? " skip" : "");
+        st.className = "st" + (data.cells[key].status === "done" ? " done" : data.cells[key].status === "skip" ? " skip" : "");
+        updateBadge();
+      });
+
+      const split = document.createElement("div");
+      split.className = "split";
+      split.append(
+        inp("small", "مدت زمان", cell.page, (v) => { data.cells[key].page = v; }),
+        inp("small", "تعداد تست", cell.practice, (v) => { data.cells[key].practice = v; })
+      );
+
+      wrap.append(
+        st,
+        inp("topic", "مبحث " + subject, cell.topic, (v) => { data.cells[key].topic = v; }),
+        split
+      );
+      return wrap;
+    }
+
+    DAYS.forEach((day) => {
+      const d = document.createElement("div");
+      d.className = "day";
+      d.textContent = day;
+      board.appendChild(d);
+      SUBJECTS.forEach((s) => board.appendChild(renderCell(day, s)));
+    });
+
+    function updateBadge() {
+      const n = Object.values(data.cells).filter((c) => c.status === "done").length;
+      document.getElementById("badge").textContent = "شنبه تا جمعه · " + n + " از 42 تکمیل";
+    }
+    updateBadge();
+
+    document.getElementById("name").addEventListener("input", (e) => { data.name = e.target.value; });
+    document.getElementById("week").addEventListener("input", (e) => { data.week = e.target.value; });
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 1800);
+    }
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      showToast("برنامه در همین دستگاه ذخیره شد");
+    });
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      data = emptyState();
+      localStorage.setItem(KEY, JSON.stringify(data));
+      location.reload();
+    });
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>
